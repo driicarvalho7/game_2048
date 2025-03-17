@@ -47,6 +47,17 @@ const move = (grid: Grid, direction: Direction): Grid => {
   return newGrid;
 };
 
+const checkGameOver = (grid: Grid): boolean => {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (grid[r][c] === 0) return false;
+      if (r < SIZE - 1 && grid[r][c] === grid[r + 1][c]) return false;
+      if (c < SIZE - 1 && grid[r][c] === grid[r][c + 1]) return false;
+    }
+  }
+  return true;
+};
+
 const colors: Record<number, string> = {
   0: "bg-gray-200",
   2: "bg-yellow-100",
@@ -64,10 +75,20 @@ const colors: Record<number, string> = {
 
 export default function Home() {
   const [grid, setGrid] = useState<Grid>(EMPTY_GRID());
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(
+    Number(localStorage.getItem("highScore") || "0")
+  );
+  const [gameOver, setGameOver] = useState<boolean>(false);
 
   const saveGrid = (newGrid: Grid) => {
     setGrid(newGrid);
     localStorage.setItem("grid", JSON.stringify(newGrid));
+  };
+
+  const resetGame = () => {
+    setGameOver(false);
+    saveGrid(randomTile(EMPTY_GRID()));
   };
 
   const loadGrid = () => {
@@ -76,10 +97,19 @@ export default function Home() {
     else saveGrid(randomTile(randomTile(EMPTY_GRID())));
   };
 
-  const handleMove = (direction: Direction) => {
-    let newGrid = move(grid, direction);
-    newGrid = randomTile(newGrid);
-    saveGrid(newGrid);
+  const updateScore = (updatedGrid: Grid) => {
+    let totalElements = 0;
+    let totalHighScore = Number(localStorage.getItem("highScore"));
+    updatedGrid.forEach((array) => {
+      array.forEach((element) => {
+        totalElements += element;
+      });
+    });
+    setScore(totalElements);
+    if (totalHighScore <= totalElements) {
+      setHighScore(totalElements);
+      localStorage.setItem("highScore", JSON.stringify(totalElements));
+    }
   };
 
   useEffect(() => {
@@ -93,6 +123,10 @@ export default function Home() {
         setGrid((prevGrid) => {
           const newGrid = move(prevGrid, event.key as Direction);
           const updatedGrid = randomTile(newGrid);
+          updateScore(updatedGrid);
+          if (checkGameOver(updatedGrid)) {
+            setGameOver(true);
+          }
           localStorage.setItem("grid", JSON.stringify(updatedGrid));
           return updatedGrid;
         });
@@ -106,6 +140,12 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
       <h1 className="text-3xl font-bold mb-4">2048</h1>
+      {gameOver && (
+        <h1 className="text-3xl text-red-300 font-bold mb-4">GAME OVER!</h1>
+      )}
+      <div className="text-lg font-semibold mb-2">
+        Score: {score} | Recorde: {highScore}
+      </div>
       <div className="grid grid-cols-4 gap-2 bg-gray-300 p-3 rounded-md">
         {grid.flat().map((val, i) => (
           <div
@@ -116,13 +156,15 @@ export default function Home() {
           </div>
         ))}
       </div>
-      <h1 className="text-[0.8rem] font-bold mt-6 mb-2">Adriano Carvalho</h1>
-      <button
-        onClick={() => saveGrid(randomTile(EMPTY_GRID()))}
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-      >
-        Reiniciar
-      </button>
+      {gameOver && (
+        <button
+          onClick={() => resetGame()}
+          className="mt-4 px-8 py-4 bg-green-500 text-white rounded"
+        >
+          Reiniciar
+        </button>
+      )}
+      <h1 className="text-[0.8rem] font-bold mt-20 mb-2">© Adriano Carvalho</h1>
     </div>
   );
 }
