@@ -1,7 +1,7 @@
 "use client";
 
 // pages/index.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const SIZE = 4;
 type Grid = number[][];
@@ -39,7 +39,7 @@ const combine = (row: number[]): number[] => {
 };
 
 const move = (grid: Grid, direction: Direction): Grid => {
-  let rotations = { ArrowUp: 3, ArrowRight: 2, ArrowDown: 1, ArrowLeft: 0 };
+  const rotations = { ArrowUp: 3, ArrowRight: 2, ArrowDown: 1, ArrowLeft: 0 };
   let newGrid = grid;
   for (let i = 0; i < rotations[direction]; i++) newGrid = rotate(newGrid);
   newGrid = newGrid.map((row) => combine(row));
@@ -91,15 +91,15 @@ export default function Home() {
     saveGrid(randomTile(EMPTY_GRID()));
   };
 
-  const loadGrid = () => {
+  const loadGrid = useCallback(() => {
     const saved = localStorage.getItem("grid");
     if (saved) setGrid(JSON.parse(saved));
     else saveGrid(randomTile(randomTile(EMPTY_GRID())));
-  };
+  }, []);
 
   const updateScore = (updatedGrid: Grid) => {
     let totalElements = 0;
-    let totalHighScore = Number(localStorage.getItem("highScore"));
+    const totalHighScore = Number(localStorage.getItem("highScore"));
     updatedGrid.forEach((array) => {
       array.forEach((element) => {
         totalElements += element;
@@ -135,7 +135,7 @@ export default function Home() {
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, []);
+  }, [loadGrid]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
@@ -143,9 +143,17 @@ export default function Home() {
       {gameOver && (
         <h1 className="text-3xl text-red-300 font-bold mb-4">GAME OVER!</h1>
       )}
-      <div className="text-lg font-semibold mb-2">
-        Score: {score} | Recorde: {highScore}
+      <div className="grid grid-cols-2 gap-4 bg-gray-200 rounded-lg p-4 mb-4 shadow">
+        <div className="text-center">
+          <div className="text-sm font-semibold text-gray-600">Score</div>
+          <div className="text-2xl font-bold text-gray-800">{score}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm font-semibold text-gray-600">Recorde</div>
+          <div className="text-2xl font-bold text-gray-800">{highScore}</div>
+        </div>
       </div>
+
       <div className="grid grid-cols-4 gap-2 bg-gray-300 p-3 rounded-md">
         {grid.flat().map((val, i) => (
           <div
