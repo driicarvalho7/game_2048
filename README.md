@@ -1,6 +1,4 @@
-# Recreating the 2048 game just for fun!
-
-## Enjoy :grinning:
+# Recreating the 2048 game just for fun! Enjoy :grinning:
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
