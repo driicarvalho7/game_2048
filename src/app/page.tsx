@@ -76,10 +76,13 @@ const colors: Record<number, string> = {
 export default function Home() {
   const [grid, setGrid] = useState<Grid>(EMPTY_GRID());
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(
-    Number(localStorage.getItem("highScore") || "0")
-  );
+  const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState<boolean>(false);
+
+  useEffect(() => {
+    const storedHighScore = localStorage.getItem("highScore");
+    if (storedHighScore) setHighScore(Number(storedHighScore));
+  }, []);
 
   const saveGrid = (newGrid: Grid) => {
     setGrid(newGrid);
@@ -92,9 +95,14 @@ export default function Home() {
   };
 
   const loadGrid = useCallback(() => {
-    const saved = localStorage.getItem("grid");
-    if (saved) setGrid(JSON.parse(saved));
-    else saveGrid(randomTile(randomTile(EMPTY_GRID())));
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("grid");
+      if (saved) {
+        setGrid(JSON.parse(saved));
+      } else {
+        saveGrid(randomTile(randomTile(EMPTY_GRID())));
+      }
+    }
   }, []);
 
   const updateScore = (updatedGrid: Grid) => {
